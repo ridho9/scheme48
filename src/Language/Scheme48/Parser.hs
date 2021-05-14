@@ -44,7 +44,7 @@ parseAtom = do
   return $ case atom of
     "#t" -> Bool True
     "#f" -> Bool False
-    _ -> Atom $ T.pack atom
+    _ -> Symbol $ T.pack atom
 
 parseNumberDec :: Parser Integer
 parseNumberDec = read <$> some digitChar
@@ -100,13 +100,13 @@ parseDottedList = do
   return $ DottedList head tail
 
 parseQuoted :: Parser LispVal
-parseQuoted = char '\'' >> parseExpr >>= (\x -> return $ List [Atom "quote", x])
+parseQuoted = char '\'' >> parseExpr >>= (\x -> return $ List [Symbol "quote", x])
 
 parseBacktick :: Parser LispVal
-parseBacktick = char '`' >> parseExpr >>= (\x -> return $ List [Atom "quasiquote", x])
+parseBacktick = char '`' >> parseExpr >>= (\x -> return $ List [Symbol "quasiquote", x])
 
 parseUnquote :: Parser LispVal
-parseUnquote = char ',' >> parseExpr >>= (\x -> return $ List [Atom "unquote", x])
+parseUnquote = char ',' >> parseExpr >>= (\x -> return $ List [Symbol "unquote", x])
 
 parseExpr :: Parser LispVal
 parseExpr =
@@ -123,7 +123,7 @@ parseExpr =
       char ')'
       return x
 
-readExpr :: Text -> String
+-- readExpr :: Text -> String
 readExpr input = case parse parseExpr "lisp" input of
-  Left err -> "No match: " <> errorBundlePretty err
-  Right val -> "Found value: " <> show val
+  Left err -> Left $ errorBundlePretty err
+  Right val -> Right $ eval val
