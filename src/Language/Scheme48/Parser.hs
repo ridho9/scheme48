@@ -122,8 +122,3 @@ parseExpr =
       x <- try parseList <|> parseDottedList
       char ')'
       return x
-
--- readExpr :: Text -> String
-readExpr input = case parse parseExpr "lisp" input of
-  Left err -> Left $ errorBundlePretty err
-  Right val -> Right $ eval val

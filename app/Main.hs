@@ -1,7 +1,7 @@
 module Main where
 
 import qualified Data.Text as T
-import Language.Scheme48.Parser (readExpr)
+import Language.Scheme48.Interpreter (readExpr)
 import System.IO (hFlush, stdout)
 
 processLine = do
