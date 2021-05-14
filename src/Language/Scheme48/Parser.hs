@@ -1,27 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser where
+module Language.Scheme48.Parser where
 
 import Data.Char (digitToInt)
 import Data.Maybe (listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Void (Void)
+import Language.Scheme48.AST
 import Numeric (readHex, readInt, readOct)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Printf (printf)
-
-data LispVal
-  = Atom String
-  | List [LispVal]
-  | DottedList [LispVal] LispVal
-  | Number Integer
-  | String Text
-  | Bool Bool
-  | Character Char
-  | Float Float
-  deriving (Show)
 
 type Parser = Parsec Void Text
 

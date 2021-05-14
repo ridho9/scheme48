@@ -1,7 +1,7 @@
 module Main where
 
 import qualified Data.Text as T
-import Parser (readExpr)
+import Language.Scheme48.Parser (readExpr)
 
 main :: IO ()
 main = do

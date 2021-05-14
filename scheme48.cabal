@@ -22,7 +22,9 @@ maintainer:         p.ridho@yahoo.co.id
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules: Parser
+    exposed-modules: 
+        Language.Scheme48.Parser
+        , Language.Scheme48.AST
     build-depends:
         base ^>=4.13.0.0
         , megaparsec ^>= 9.0.1
