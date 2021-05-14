@@ -44,7 +44,7 @@ parseAtom = do
   return $ case atom of
     "#t" -> Bool True
     "#f" -> Bool False
-    _ -> Atom atom
+    _ -> Atom $ T.pack atom
 
 parseNumberDec :: Parser Integer
 parseNumberDec = read <$> some digitChar
@@ -62,7 +62,7 @@ parseNumberHex = do
 parseNumberBin :: Parser Integer
 parseNumberBin =
   let readBin = fmap fst . listToMaybe . readInt 2 (`elem` T.unpack "01") digitToInt
-   in (string "#b" >> some hexDigitChar)
+   in string "#b" >> some hexDigitChar
         >>= (\(Just n) -> return n) . readBin
 
 parseNumber :: Parser LispVal
@@ -100,13 +100,13 @@ parseDottedList = do
   return $ DottedList head tail
 
 parseQuoted :: Parser LispVal
-parseQuoted = (char '\'' >> parseExpr) >>= (\x -> return $ List [Atom "quote", x])
+parseQuoted = char '\'' >> parseExpr >>= (\x -> return $ List [Atom "quote", x])
 
 parseBacktick :: Parser LispVal
-parseBacktick = (char '`' >> parseExpr) >>= (\x -> return $ List [Atom "quasiquote", x])
+parseBacktick = char '`' >> parseExpr >>= (\x -> return $ List [Atom "quasiquote", x])
 
 parseUnquote :: Parser LispVal
-parseUnquote = (char ',' >> parseExpr) >>= (\x -> return $ List [Atom "unquote", x])
+parseUnquote = char ',' >> parseExpr >>= (\x -> return $ List [Atom "unquote", x])
 
 parseExpr :: Parser LispVal
 parseExpr =
@@ -123,7 +123,7 @@ parseExpr =
       char ')'
       return x
 
--- readExpr :: Text -> Text
+readExpr :: Text -> String
 readExpr input = case parse parseExpr "lisp" input of
-  Left err -> printf "No match: %s" (errorBundlePretty err)
-  Right val -> printf "Found value: %s" (show val)
+  Left err -> "No match: " <> errorBundlePretty err
+  Right val -> "Found value: " <> show val
