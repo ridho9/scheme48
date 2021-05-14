@@ -1,10 +1,9 @@
 module Main where
 
-import qualified MyLib (someFunc)
-
-name = "Ridho"
+import qualified Data.Text as T
+import Parser (readExpr)
 
 main :: IO ()
 main = do
-  putStrLn "Ridho"
-  MyLib.someFunc
+  expr <- getLine
+  putStrLn $ readExpr $ T.pack expr

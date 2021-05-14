@@ -1,0 +1,7 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:scheme48"
+
+    - path: "app/Main.hs"
+      component: "scheme48:exe:scheme48"
