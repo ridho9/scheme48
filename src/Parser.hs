@@ -19,12 +19,17 @@ data LispVal
   | Number Integer
   | String Text
   | Bool Bool
+  | Character Char
+  | Float Float
   deriving (Show)
 
 type Parser = Parsec Void Text
 
 symbol :: Parser Char
 symbol = oneOf $ T.unpack "!#$%&|*+-/:<=>?@^_~"
+
+spaces :: Parser ()
+spaces = space1
 
 stringContentBackslash :: Parser Char
 stringContentBackslash =
@@ -64,13 +69,11 @@ parseNumberHex = do
   [(num, _)] <- readHex <$> (string "#x" >> some hexDigitChar)
   return num
 
-readBin :: Integral a => String -> Maybe a
-readBin = fmap fst . listToMaybe . readInt 2 (`elem` T.unpack "01") digitToInt
-
 parseNumberBin :: Parser Integer
-parseNumberBin = do
-  Just num <- readBin <$> (string "#b" >> some hexDigitChar)
-  return num
+parseNumberBin =
+  let readBin = fmap fst . listToMaybe . readInt 2 (`elem` T.unpack "01") digitToInt
+   in (string "#b" >> some hexDigitChar)
+        >>= (\(Just n) -> return n) . readBin
 
 parseNumber :: Parser LispVal
 parseNumber =
@@ -81,8 +84,54 @@ parseNumber =
             <|> parseNumberBin
         )
 
+parseNamedChar :: Parser Char
+parseNamedChar = (string "space" >> return ' ') <|> (string "newline" >> return '\n')
+
+parseChar :: Parser LispVal
+parseChar =
+  Character
+    <$> ( string "#\\"
+            >> label "single char" (notFollowedBy spaceChar >> anySingle)
+              <|> parseNamedChar
+        )
+
+parseFloat :: Parser LispVal
+parseFloat =
+  Float . read
+    <$> some digitChar <> (T.unpack <$> chunk ".") <> some digitChar
+
+parseList :: Parser LispVal
+parseList = List <$> sepBy parseExpr spaces
+
+parseDottedList :: Parser LispVal
+parseDottedList = do
+  head <- endBy parseExpr spaces
+  tail <- char '.' >> spaces >> parseExpr
+  return $ DottedList head tail
+
+parseQuoted :: Parser LispVal
+parseQuoted = (char '\'' >> parseExpr) >>= (\x -> return $ List [Atom "quote", x])
+
+parseBacktick :: Parser LispVal
+parseBacktick = (char '`' >> parseExpr) >>= (\x -> return $ List [Atom "quasiquote", x])
+
+parseUnquote :: Parser LispVal
+parseUnquote = (char ',' >> parseExpr) >>= (\x -> return $ List [Atom "unquote", x])
+
 parseExpr :: Parser LispVal
-parseExpr = parseNumber <|> parseString <|> parseAtom
+parseExpr =
+  parseQuoted
+    <|> (try parseFloat <|> parseNumber)
+    <|> parseString
+    <|> parseChar
+    <|> parseAtom
+    <|> parseBacktick
+    <|> parseUnquote
+    <|> do
+      char '('
+      x <- try parseList <|> parseDottedList
+      char ')'
+      return x
 
 -- readExpr :: Text -> Text
 readExpr input = case parse parseExpr "lisp" input of
